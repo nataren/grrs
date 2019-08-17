@@ -1,5 +1,10 @@
-use structopt::StructOpt;
+
 use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
+
+use structopt::StructOpt;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -16,13 +21,15 @@ impl fmt::Display for Cli {
     }
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let args = Cli::from_args();
-    let content = std::fs::read_to_string(&args.path)
-        .expect("could not read file");
-    for line in content.lines() {
-        if line.contains(&args.pattern) {
-            println!("{}", line);
+    let f = File::open(&args.path)?;
+    let reader = BufReader::new(f);
+    for line in reader.lines() {
+        let l = line.unwrap();
+        if l.contains(&args.pattern) {
+            println!("{}", l);
         }
     }
+    Ok(())
 }
