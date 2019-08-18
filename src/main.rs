@@ -1,10 +1,7 @@
-
 use std::fmt;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::prelude::*;
-
 use structopt::StructOpt;
+use failure::ResultExt;
+use exitfailure::ExitFailure;
 
 #[derive(StructOpt)]
 struct Cli {
@@ -21,15 +18,16 @@ impl fmt::Display for Cli {
     }
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), ExitFailure> {
     let args = Cli::from_args();
-    let f = File::open(&args.path)?;
-    let reader = BufReader::new(f);
-    for line in reader.lines() {
-        let l = line.unwrap();
-        if l.contains(&args.pattern) {
-            println!("{}", l);
+    let content = std::fs::read_to_string(&args.path)
+        .with_context(|_| format!("could not read file `{}`", args.path.display()))?;
+
+    for line in content.lines() {
+        if line.contains(&args.pattern) {
+            println!("{}", line);
         }
     }
+
     Ok(())
 }
